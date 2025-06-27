@@ -169,7 +169,7 @@ case "$1" in
         echo "export zshexit() { incognito exit }"
         ;;
     *)
-        echo "Invalid command: \"$1\"" > &2
+        echo "Invalid command: \"$1\"" >&2
         echo ""
         usage
         exit 1
