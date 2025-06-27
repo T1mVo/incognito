@@ -1,20 +1,26 @@
-#!/bin/env zsh
+#!/usr/bin/env zsh
 
-set -euo pipefail
+set -eo pipefail
 
 VERSION="0.1.0"
 VERBOSE=0
 
 # Determine the history file location, defaulting to ~/.zsh_history
-: "${HISTFILE:=$HOME/.zsh_history}"
+if [[ -z "$HISTFILE" ]]; then
+    HISTFILE="$HOME/.zsh_history"
+fi
+
+set -u
 
 # Set the marker file location based on the operating system and create the directory
 case "$(uname -s)" in
     Darwin)
         MARKER_FILE="$HOME/Library/Application Support/incognito/marker"
+        OS="macOS"
         ;;
     Linux)
         MARKER_FILE="$HOME/.local/share/incognito/marker"
+        OS="Linux"
         ;;
     *)
         echo "Unsupported operating system: $(uname -s)"
@@ -27,6 +33,7 @@ usage() {
     echo "Usage: incognito <command> [options]"
     echo ""
     echo "Commands:"
+    echo "  status  Show the current incognito mode status"
     echo "  enter    Enter incognito mode"
     echo "  exit     Exit incognito mode"
     echo "  help     Show this help message"
@@ -43,9 +50,34 @@ usage() {
     echo "  Add this to your .zshrc: \"eval \"\$(incognito exit)\"\""
 }
 
+status() {
+    if [[ -f "$MARKER_FILE" ]]; then
+        local TIMESTAMP=$(cat "$MARKER_FILE" | grep -oE "[0-9]+" | head -n 1)
+        local TIME
+        local DATE
+
+        if [[ "$OS" == "macOS" ]]; then
+            TIME=$(date -r "$TIMESTAMP" "+%H:%M:%S")
+            DATE=$(date -r "$TIMESTAMP" "+%d.%m.%y")
+        elif [[ "$OS" == "Linux" ]]; then
+            TIME=$(date -d @"$TIMESTAMP" "+%H:%M:%S")
+            DATE=$(date -d @"$TIMESTAMP" "+%d.%m.%y")
+        fi
+
+        echo "You entered incognito mode at $TIME on $DATE."
+    else
+        echo "You are not in incognito mode."
+    fi
+}
+
 mark() {
     if [[ -f "$MARKER_FILE" ]]; then
         echo "You are already in incognito mode. Use \"incognito exit\" to leave."
+        exit 0
+    fi
+
+    if [[ ! -f "$HISTFILE" ]]; then
+        echo "History file not found at \"$HISTFILE\". Did you export \$HISTFILE?" >&2
         exit 1
     fi
 
@@ -53,7 +85,6 @@ mark() {
 
     if [[ -z "$MARKER" && "$VERBOSE" -eq 1 ]]; then
         echo "Empty history. The whole history will be cleared when exiting incognito mode."
-        exit 1
     fi
 
     echo "$MARKER" > "$MARKER_FILE"
@@ -62,7 +93,7 @@ mark() {
 remove() {
     if [[ ! -f "$MARKER_FILE" ]]; then
         echo "Nothing to do. You are not in incognito mode."
-        exit 1
+        exit 0
     fi
 
     local MARKER=$(cat "$MARKER_FILE")
@@ -122,10 +153,13 @@ if [[ $# -eq 0 ]]; then
 fi
 
 case "$1" in
-    enter)
+    status|st)
+        status
+        ;;
+    enter|en)
         mark
         ;;
-    exit)
+    exit›ex)
         remove
         ;;
     help)
@@ -135,7 +169,7 @@ case "$1" in
         echo "export zshexit() { incognito exit }"
         ;;
     *)
-        echo "Invalid command: \"$1\""
+        echo "Invalid command: \"$1\"" > &2
         echo ""
         usage
         exit 1
