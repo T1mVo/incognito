@@ -159,7 +159,7 @@ case "$1" in
     enter|en)
         mark
         ;;
-    exit›ex)
+    exit|ex)
         remove
         ;;
     help)
