@@ -41,7 +41,7 @@ incognito status
 incognito exit
 
 # Exit incognito mode without clearing the history
-incogntio exit --keep-history
+incognito exit --keep-history
 
 # Show help
 incognito help
