@@ -30,8 +30,6 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/T1mVo/incognito/main/insta
 
 ## Usage
 
-### Basic Commands
-
 ```bash
 # Enter incognito mode
 incognito enter
@@ -39,9 +37,20 @@ incognito enter
 # Check current status
 incognito status
 
-# Exit incognito mode (removes commands from history)
+# Exit incognito mode
 incognito exit
+
+# Exit incognito mode without clearing the history
+incogntio exit --keep-history
 
 # Show help
 incognito help
+```
+
+## Auto-exit on shell exit
+
+To automatically exit incognito mode when your shell terminates, add this line to your `.zshrc`:
+
+```bash
+eval "$(incognito setup)"
 ```

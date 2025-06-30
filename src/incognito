@@ -2,8 +2,9 @@
 
 set -eo pipefail
 
-VERSION="0.1.0"
+VERSION="0.2.0"
 VERBOSE=0
+KEEP_HISTORY=0
 
 # Determine the history file location, defaulting to ~/.zsh_history
 if [[ -z "$HISTFILE" ]]; then
@@ -33,21 +34,20 @@ usage() {
     echo "Usage: incognito <command> [options]"
     echo ""
     echo "Commands:"
-    echo "  status  Show the current incognito mode status"
+    echo "  status   Show the current incognito mode status"
     echo "  enter    Enter incognito mode"
     echo "  exit     Exit incognito mode"
     echo "  help     Show this help message"
-    echo "  setup    Prints the shell functions to exit incognito mode on shell exit"
+    echo "  setup    Prints the shell function to exit incognito mode on shell exit"
     echo ""
     echo "Options:"
-    echo "  -h, --help    Show this help message"
-    echo ""
-    echo "Examples:"
-    echo "  incognito enter"
-    echo "  incognito exit"
+    echo "  -h, --help          Show this help message"
+    echo "  -v, --verbose       Enable verbose output"
+    echo "  --version           Show the version of incognito"
+    echo "  -k, --keep-history  Keep the history when exiting incognito mode"
     echo ""
     echo "Exit incognito on shell exit:"
-    echo "  Add this to your .zshrc: \"eval \"\$(incognito exit)\"\""
+    echo "  Add this to your .zshrc: 'eval \"\$(incognito setup)\"'"
 }
 
 status() {
@@ -96,6 +96,14 @@ remove() {
         exit 0
     fi
 
+    if [[ "$KEEP_HISTORY" -eq 1 ]]; then
+        if [[ "$VERBOSE" -eq 1 ]]; then
+            echo "Keeping history. Exiting incognito mode without clearing history."
+        fi
+        rm -f "$MARKER_FILE"
+        exit 0
+    fi
+
     local MARKER=$(cat "$MARKER_FILE")
 
     if [[ -z "$MARKER" ]]; then
@@ -134,6 +142,9 @@ for arg in "$@"; do
     case "$arg" in
         -v|--verbose)
             VERBOSE=1
+            ;;
+        -k|--keep-history)
+            KEEP_HISTORY=1
             ;;
         -h|--help)
             usage
