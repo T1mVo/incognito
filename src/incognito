@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 VERBOSE=0
 KEEP_HISTORY=0
 
@@ -12,6 +12,19 @@ if [[ -z "$HISTFILE" ]]; then
 fi
 
 set -u
+
+# Check zsh options for history settings
+ZSH_CONFIG="$(zsh -ic "set -o")"
+EXTENDED_HISTORY=$(echo "$ZSH_CONFIG" | grep "extendedhistory" | awk '{print $2}')
+SHARE_HISTORY=$(echo "$ZSH_CONFIG" | grep "sharehistory" | awk '{print $2}')
+if [[ "$EXTENDED_HISTORY" == "off" ]]; then
+    echo "The \"extendedhistory\" option must be enabled for incognito to function properly" >&2
+    exit 1
+fi
+if [[ "$SHARE_HISTORY" == "off" ]]; then
+    echo "The \"sharehistory\" option must be enabled for incognito to function properly" >&2
+    exit 1
+fi
 
 # Set the marker file location based on the operating system and create the directory
 case "$(uname -s)" in
